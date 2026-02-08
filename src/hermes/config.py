@@ -72,7 +72,7 @@ class SearchConfig(BaseSettings):
         10.0, description="If reranking exceeds this, return retrieval-only results"
     )
     retrieval_mode: Literal["dense", "sparse", "hybrid"] = Field(
-        "dense", description="Retrieval strategy"
+        "hybrid", description="Retrieval strategy"
     )
     rrf_k: int = Field(60, description="RRF constant for reciprocal rank fusion")
 
