@@ -248,14 +248,14 @@ HERMES supports three retrieval strategies, each with different strengths:
 ```
 Query: "calculateBMI function"
       │
-      ├── Dense:  [compute_health_score, calculateBMI, get_weight_ratio]
+      |- Dense:  [compute_health_score, calculateBMI, get_weight_ratio]
       │
-      ├── Sparse: [calculateBMI, bmi_validator, bmi_test]
+      |- Sparse: [calculateBMI, bmi_validator, bmi_test]
       │
-      ▼ RRF Fusion
+      |-> RRF Fusion
       [calculateBMI, compute_health_score, bmi_validator, ...]
       │
-      ▼ Cross-encoder rerank
+      |-> Cross-encoder rerank
       Final results
 ```
 
