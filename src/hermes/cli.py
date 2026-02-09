@@ -40,20 +40,77 @@ def index(repo: str, out: str):
         click.echo(f"  {k}: {v}")
 
 
-@cli.command()
-@click.option("--artifacts", default="artifacts", type=click.Path(exists=True), help="Artifacts directory")
-@click.option("--host", default="0.0.0.0", help="Bind host")
-@click.option("--port", default=8000, type=int, help="Bind port")
-@click.option("--reload", is_flag=True, help="Enable auto-reload (dev only)")
-def serve(artifacts: str, host: str, port: int, reload: bool):
-    """Start the HERMES query API server."""
+def _start_api(artifacts: str, host: str, port: int, reload: bool):
+    """Start the HERMES API server (uvicorn)."""
     import uvicorn
 
     from hermes.api.main import create_app
 
-    config = load_config(artifacts_dir=Path(artifacts))
+    artifacts_path = Path(artifacts)
+    if not artifacts_path.exists():
+        click.echo(f"Error: Artifacts directory '{artifacts}' does not exist.", err=True)
+        sys.exit(1)
+
+    config = load_config(artifacts_dir=artifacts_path)
     app = create_app(config)
     uvicorn.run(app, host=host, port=port, reload=reload)
+
+
+@cli.group(invoke_without_command=True)
+@click.option("--artifacts", default="artifacts", type=click.Path(), help="Artifacts directory")
+@click.option("--host", default="0.0.0.0", help="Bind host")
+@click.option("--port", default=8000, type=int, help="Bind port")
+@click.option("--reload", is_flag=True, help="Enable auto-reload (dev only)")
+@click.pass_context
+def serve(ctx, artifacts: str, host: str, port: int, reload: bool):
+    """Start the HERMES query API server."""
+    ctx.ensure_object(dict)
+    ctx.obj["serve_opts"] = {
+        "artifacts": artifacts,
+        "host": host,
+        "port": port,
+        "reload": reload,
+    }
+    if ctx.invoked_subcommand is None:
+        _start_api(artifacts, host, port, reload)
+
+
+@serve.command()
+@click.option("--ui-port", default=3000, type=int, help="Next.js dev server port")
+@click.pass_context
+def ui(ctx, ui_port: int):
+    """Start HERMES API server and Next.js web UI concurrently."""
+    import subprocess
+
+    opts = ctx.obj["serve_opts"]
+    artifacts_path = Path(opts["artifacts"])
+    artifacts_path.mkdir(parents=True, exist_ok=True)
+
+    web_dir = Path(__file__).resolve().parent.parent.parent / "web"
+    if not web_dir.is_dir():
+        click.echo(f"Error: web directory not found at {web_dir}", err=True)
+        sys.exit(1)
+
+    click.echo(f"Starting Next.js dev server on port {ui_port}...")
+    next_proc = subprocess.Popen(
+        ["npm", "run", "dev", "--", "-p", str(ui_port)],
+        cwd=str(web_dir),
+    )
+
+    click.echo(f"\n  API server:  http://{opts['host']}:{opts['port']}")
+    click.echo(f"  Web UI:      http://localhost:{ui_port}\n")
+
+    try:
+        _start_api(
+            opts["artifacts"], opts["host"], opts["port"], opts["reload"],
+        )
+    finally:
+        click.echo("\nShutting down Next.js dev server...")
+        next_proc.terminate()
+        try:
+            next_proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            next_proc.kill()
 
 
 @cli.command("eval")

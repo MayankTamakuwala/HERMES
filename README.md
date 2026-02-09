@@ -98,8 +98,16 @@ hermes index --repo /path/to/your/project --out ./artifacts
 ### Start the Query Server
 
 ```bash
+# API only
 hermes serve --artifacts ./artifacts --port 8000
+
+# API + Web UI (recommended for local development)
+hermes serve ui --artifacts ./artifacts
+# → API at http://0.0.0.0:8000
+# → Web UI at http://localhost:3000
 ```
+
+If no index exists yet, the web UI will show a welcome screen prompting you to index a repository before searching.
 
 ### Search
 
@@ -140,6 +148,9 @@ pytest
 | GET | `/health` | Health check |
 | GET | `/stats` | Index stats, model info, cache hit rates |
 | POST | `/reload-index` | Reload index from disk without restart |
+| GET | `/index/check` | Check if an index is loaded (`{"has_index": bool}`) |
+| POST | `/index` | Start async indexing of a repository |
+| GET | `/index/status` | Poll indexing progress (idle/indexing/done/error) |
 
 ### POST /search
 
@@ -330,7 +341,7 @@ Models are downloaded automatically from Hugging Face on first use. Set `HF_HOME
 
 ```
 src/hermes/
-├── cli.py                   # CLI entry point (index, serve, eval, bench)
+├── cli.py                   # CLI entry point (index, serve, serve ui, eval, bench)
 ├── config.py                # Pydantic-settings configuration
 ├── logging.py               # Structured logging (structlog)
 ├── chunking/                # Language-aware code chunking

@@ -209,3 +209,7 @@ __marimo__/
 # HERMES artifacts
 artifacts/
 reports/
+
+# Web UI
+web/node_modules/
+web/.next/
