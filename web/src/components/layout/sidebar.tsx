@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { ChartNoAxesCombinedIcon, DatabaseIcon, SearchIcon, SettingsIcon } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Search", icon: "S" },
-  { href: "/index-repo", label: "Index", icon: "I" },
-  { href: "/stats", label: "Stats", icon: "A" },
-  { href: "/settings", label: "Settings", icon: "G" },
+  { href: "/", label: "Search", icon: <SearchIcon /> },
+  { href: "/index-repo", label: "Index", icon: <DatabaseIcon /> },
+  { href: "/stats", label: "Stats", icon: <ChartNoAxesCombinedIcon /> },
+  { href: "/settings", label: "Settings", icon: <SettingsIcon /> },
 ];
 
 export function Sidebar() {
